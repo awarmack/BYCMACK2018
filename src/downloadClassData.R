@@ -174,6 +174,10 @@ get_class_data <- function(results){
   
   class_data$class <- row.names(class_data)
   
+  row.names(class_data) <- NULL
+  
+  class_data$class <- str_extract(class_data$class, ".*(?=\\.\\d*)")
+  
   return(class_data)
 }
 
@@ -187,39 +191,31 @@ tableno <- max(which(sapply(scraped_data, contains_tuna)))
 
 results <- format_results(scraped_data, tableno)
 
+rm(scraped_data)
+
 results <- get_class_data(results)
 
 
 ## Clean Up ###########
 
-#remove row names
-row.names(results) <- NULL
+retired <- results$Corrected=="RET"
 
-#remove unneeded rows
-remove_rows <- grep("[cC]lass", results[ ,1])
-results <- results[-remove_rows, ]
+#set retired to place
+results$place[retired] <- "RET"
+results$finish_time[retired] <- NA
+results$elapsed_time[retired] <- NA
+results$Corrected[retired] <- NA
 
+results <- results %>% rename(boat = Boat, sail = Sail)
 
-remove_rows <- grepl("[fF]inished", results[ ,1])
-results <- results[!remove_rows, ]
-
-remove_rows <- grep("[cC]ourse", results[ ,1])
-results <- results[-remove_rows, ]
-
-#class
-head(str_extract(results$class, "\\.\\d*$"),100)
-results$class <- str_extract(results$class, ".*(?=\\.\\d*)")
 
 #Convert data types
 results$elapsed_time <- hms(results$elapsed_time)
+results$Corrected <- hms(results$Corrected)
 
 #finish time
 # find the start date
 
-strptime(head(results$finish_time), format="%A - %X")
 
-
-
-
-save(results, file="./data/modified/results.Rdata")
+save(results, file="./data/results.Rdata")
 

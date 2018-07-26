@@ -1,0 +1,60 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r, cache=TRUE}
+library(ggplot2)
+library(ggmap)
+library(ggrepel)
+
+rm(list=ls())
+
+source("./src/downloadPositions.R")
+source("./src/downloadClassData.R")
+
+
+pos <- left_join(pos, results)
+
+
+lkhuron <- get_map(location = "Lake Huron", zoom=7)
+
+
+
+
+```
+
+```{r, cache=TRUE}
+
+pos <- pos[pos$place != "RET", ]
+classo <- pos %>% filter(class=="Class O Class")
+
+ggmap(lkhuron)+
+  geom_path(data=classo, aes(x=lon, y=lat, color=boat))+ 
+  scale_x_continuous(limits = c(-84.5, -82))+
+  scale_y_continuous(limits = c(43, 46))
+
+```
+
+
+```{r}
+
+classo <- pos %>% filter(class=="Class O Class")
+
+ggplot(classo)+geom_path(aes(x=GpsAt, y=SOG, color=boat))+scale_y_continuous(limits=c(0, 7))
+
+
+```
+
+```{r}
+
+classo$day <- format(classo$GpsAt, "%F")
+
+ggplot(classo[classo$day=="2018-07-14", ])+geom_path(aes(x=GpsAt, y=cumd, color=boat))
+
+
+
+```
+
