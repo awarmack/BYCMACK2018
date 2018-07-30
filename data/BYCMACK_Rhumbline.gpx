@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="OpenCPN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:opencpn="http://www.opencpn.org">
+  <rte>
+    <name>BYCMACK_Rhumbline</name>
+    <extensions>
+      <opencpn:guid>1a4506e4-538f-492f-8c3e-3d3a6ce40bc3</opencpn:guid>
+      <opencpn:viz>1</opencpn:viz>
+      <opencpn:planned_speed>6.00</opencpn:planned_speed>
+      <opencpn:time_display>PC</opencpn:time_display>
+    </extensions>
+    <rtept lat="43.067440000" lon="-82.427090000">
+      <time>2018-06-19T21:23:54Z</time>
+      <name>BYCMACK_Start</name>
+      <sym>triangle</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>6c70c72b-c048-40ad-871f-71af547d8c93</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:shared>1</opencpn:shared>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      </extensions>
+    </rtept>
+    <rtept lat="43.857937597" lon="-82.601604349">
+      <time>2018-06-17T11:20:06Z</time>
+      <name>Harbor Beach</name>
+      <sym>*Default</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>21de9a56-3acd-43be-a450-8fbe12c45146</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="-1" step="-1" units="-1" colour="#FFFFFF" />
+      </extensions>
+    </rtept>
+    <rtept lat="45.055636667" lon="-83.177510000">
+      <time>2018-06-19T21:26:20Z</time>
+      <name>TBLT</name>
+      <sym>diamond</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>65ea0555-ce08-43a0-b842-3cd205b40d85</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      </extensions>
+    </rtept>
+    <rtept lat="45.274365000" lon="-83.374936667">
+      <time>2018-06-19T21:26:32Z</time>
+      <name>False Presque Isle</name>
+      <sym>diamond</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>7798c12e-9b66-4f2f-aa76-46c24922c48d</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      </extensions>
+    </rtept>
+    <rtept lat="45.369858000" lon="-83.478920000">
+      <time>2018-06-17T11:13:34Z</time>
+      <name>PRESQ ISL LT 1M</name>
+      <desc>One mile off Presque Isle Light</desc>
+      <sym>*Default</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>6051adbb-24ca-4c29-8077-61f00540d957</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:shared>1</opencpn:shared>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="-1" step="-1" units="-1" colour="#FFFFFF" />
+      </extensions>
+    </rtept>
+    <rtept lat="45.820485000" lon="-84.423596667">
+      <time>2018-06-19T21:26:48Z</time>
+      <name>BOBLO</name>
+      <sym>diamond</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>0070024b-734d-496f-88df-4e377b502f16</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      </extensions>
+    </rtept>
+    <rtept lat="45.843695000" lon="-84.614908333">
+      <time>2018-06-19T21:27:37Z</time>
+      <name>BYCMACK_Finish</name>
+      <sym>diamond</sym>
+      <type>WPT</type>
+      <extensions>
+        <opencpn:guid>7016ba66-c84f-48f2-b991-e07127724fe5</opencpn:guid>
+        <opencpn:viz_name>1</opencpn:viz_name>
+        <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+        <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      </extensions>
+    </rtept>
+  </rte>
+</gpx>
