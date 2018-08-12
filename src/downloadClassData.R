@@ -198,7 +198,7 @@ results <- get_class_data(results)
 
 ## Clean Up ###########
 
-retired <- results$Corrected=="RET"
+retired <- results$Corrected=="RET" | 
 
 #set retired to place
 results$place[retired] <- "RET"
@@ -215,6 +215,26 @@ results$Corrected <- hms(results$Corrected)
 
 #finish time
 # find the start date
+
+getFinishTime <- function(finish_time){
+
+  finish_date <- ifelse(grepl("Tuesday", finish_time), "2018-07-17", "2017-07-16")
+  finish_date[is.na(finish_time)] <-  NA
+  finish_date[finish_time==""] <- NA
+  
+  finish_time <- str_extract(finish_time, pattern = "\\d{2}:\\d{2}:\\d{2}")
+  
+  finish_time <- paste(finish_date, finish_time)
+  finish_time[finish_time=="NA NA"] <- NA
+  
+  finish_time <- as.POSIXct(finish_time, tz="America/Detroit")
+  return(finish_time)
+}
+
+results$finish_time <- getFinishTime(results$finish_time)
+
+results$start_time <- results$finish_time - results$elapsed_time
+
 
 
 save(results, file="./data/results.Rdata")

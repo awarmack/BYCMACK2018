@@ -2,6 +2,14 @@
 
 #Create vector of cumulative elapsed time since start for each boat. 
 
+getElapsedSecs <- function(time){
+  secs <- as.numeric(difftime(time, lag(time, 1), units="secs"))
+  secs[1] <- 0
+  elapsed_secs <- cumsum(secs)
+  return(elapsed_secs)
+}
+
+
 calcCorrected<- function(time, rating){
   # Time = column of time spans
   # returns a column of elapsed times
@@ -23,8 +31,5 @@ calcCorrected<- function(time, rating){
   return(corrected_time)
   
 }
-
-
-#at each point, calculate elapsed time X rating
 
 

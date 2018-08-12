@@ -9,6 +9,7 @@ output: html_notebook
 library(ggplot2)
 library(ggmap)
 library(ggrepel)
+library(dplyr)
 
 rm(list=ls())
 
@@ -88,6 +89,51 @@ ggplot(classo)+geom_path(aes(x=time, y=SOG, group=boat), color="gray")+
 
 
 ```
+
+```{r}
+#look at corrected versus actual
+
+source("./src/calcCorrection.R")
+
+
+
+zube <- classo[classo$boat=="Zubenelgenubi", ] 
+zube$corrected <- calcCorrected(zube$time, 0.718)
+
+albacore <- classo[classo$boat=="Albacore", ] 
+albacore$corrected <- calcCorrected(albacore$time, 0.737)
+
+#dat <- bind_rows(zube, albacore)
+
+ggplot()+
+  geom_path(data=zube, aes(x=time, y=dmg, color=boat))+
+  geom_path(data=zube, aes(x=corrected, y=dmg, color=boat), linetype=2)+
+  geom_path(data=albacore, aes(x=time, y=dmg, color=boat))+
+  geom_path(data=albacore, aes(x=corrected, y=dmg, color=boat), linetype=2)+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 1)
+
+
+
+```
+
+```{r}
+#calculate gain/loss on Albacore over the race
+
+#distance between them 
+
+zubevtuna <- classo %>% filter(boat %in% c("Zubenelgenubi", "Albacore"), !is.na(boat)) %>% select(boat, time, dmg) 
+
+zubevtuna <- zubevtuna[c(-325, -478), ]
+
+zubevtuna <- zubevtuna %>% spread(boat, dmg) %>% mutate(diff = Albacore - Zubenelgenubi)
+
+zubevtuna$trend <- ifelse(c(0, diff(zubevtuna$diff) > 0)==1, "loss", "gain")
+
+ggplot(zubevtuna, aes(x=time, y=diff, color=trend)) + geom_point()
+
+```
+
 
 ```{r}
 #race #1

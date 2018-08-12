@@ -1,7 +1,10 @@
+rm(list=ls())
+
 #parse Positions
 library(xml2)
 library(tidyr)
 library(geosphere)
+library(lubridate)
 
 
 source("./src/parseXMLfunctions.R")
@@ -77,5 +80,13 @@ pos$dtf <- mark_dtf + pos$dtm
 
 #distance made good to the mark
 pos$dmg <- totalLength - pos$dtf
+
+
+
+
+
+
+
+
 
 save(pos, file="./data/positions.Rdata")
