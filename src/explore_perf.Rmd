@@ -1,0 +1,66 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+ggplot(zube) + geom_histogram(aes(x=pol_perc), bins=100)+scale_x_continuous(limits=c(0, 300))
+```
+
+```{r}
+library(ggplot2)
+ggplot(zube)+ geom_point(aes(x=time, y=pol_perc))+scale_y_continuous(limits=c(0,300))
+
+```
+
+```{r}
+
+#looking at the polar
+
+tws5 <- zube[zube$Tws > 9.5 & zube$Tws < 10.5, ]
+
+polarData <- as.data.frame(pol.model$pol.matrix)
+names(polarData) <- paste0("tws_", pol.model$tws)
+polarData$twa <- pol.model$twa
+
+
+ggplot() + geom_point(data=tws5, aes(x=abs(Twa), y=Sog, color=pol_perc), alpha=0.2)+scale_color_gradient2(mid="red", low="blue", high="blue", midpoint=100)+
+  geom_path(data=polarData, aes(x=twa, y=tws_10))
+  
+  
+  
+```
+
+12 Knot Band
+```{r}
+
+plotPolarBand <- function(tws, x){
+  
+  x <- x[x$Tws > (tws-0.5) & x$Tws < tws+0.5, ]
+  
+  twa <- 40:180
+  
+  pol <- data.frame(lower = getOptV(twa, tws-0.5, pol.model), 
+                    mid = getOptV(twa, tws, pol.model), 
+                    upper = getOptV(twa, tws+0.5, pol.model))
+
+  pol <- gather(pol)
+  pol$twa <- twa
+
+  y <- ggplot()+geom_point(data=x, aes(x=abs(Twa), y=Bsp, color=pol_perc), alpha=0.2)+
+    geom_path(data=pol, aes(x=twa, y=value, group=key))+
+    scale_color_gradient2(low = "red", mid="blue", high="red", midpoint=100)+
+    coord_polar()+
+    scale_x_continuous(limit=c(0, 360))
+  
+  print(y)
+  
+}
+
+plotPolarBand(5, zube)
+plotPolarBand(6, zube)
+plotPolarBand(9, zube)
+plotPolarBand(10, zube)
+  
+  
+```
+

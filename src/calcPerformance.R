@@ -7,7 +7,7 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 library(zoo)
-library(arima)
+library(akima)
 
 ### Load Data
 load("./data/positions.Rdata")
@@ -24,10 +24,9 @@ source("src/optimalPerformanceFunctions.R")
 
 
 ### Join the Yellowbrick data with the results to the positions
-dat <- left_join(pos, results)
+results <- results %>% select(-Corrected, -elapsed_time)
 
-### Cleanup some data naming
-dat <- rename(dat, corr_finish = Corrected)
+dat <- left_join(pos, results)
 
 ### Remove Retired, pre-start , post-finish data
 dat <- dat %>% filter(!is.na(place))
@@ -47,7 +46,6 @@ dat <- dat %>% distinct(boat, time, .keep_all=TRUE)
 dat$elapsed_secs <- dat$time - dat$start_time
 
 dat$corr_elapsed <- as.numeric(dat$elapsed_secs) * as.numeric(dat$rating) 
-
 
 dat$corr_time <- dat$corr_elapsed + dat$start_time
 
@@ -90,16 +88,16 @@ diff_imp <- as.data.frame(apply(diff[, -1], 2, FUN=imputeValues))
 
 diff <- cbind(diff[, c("corr_time")], diff_imp)
 
-zube <- dat %>% filter(boat == "Zubenelgenubi")
+zube_yb <- dat %>% filter(boat == "Zubenelgenubi")
 
-diff <- diff[diff$corr_time %in% zube$corr_time, ]
+diff <- diff[diff$corr_time %in% zube_yb$corr_time, ]
 
-zube$vsAlbacore <- diff$Albacore - diff$Zubenelgenubi 
-zube$vsBuffalo <- diff$`Flying Buffalo` - diff$Zubenelgenubi
-zube$vsCourage <- diff$Courage - diff$Zubenelgenubi 
-zube$vsDefiant <- diff$Defiant - diff$Zubenelgenubi  
-zube$vsJamJam <- diff$Jamjam - diff$Zubenelgenubi 
-zube$vsShillelagh <- diff$Shillelagh - diff$Zubenelgenubi
+zube_yb$vsAlbacore <- diff$Albacore - diff$Zubenelgenubi
+zube_yb$vsBuffalo <- diff$`Flying Buffalo` - diff$Zubenelgenubi
+zube_yb$vsCourage <- diff$Courage - diff$Zubenelgenubi
+zube_yb$vsDefiant <- diff$Defiant - diff$Zubenelgenubi 
+zube_yb$vsJamJam <- diff$Jamjam - diff$Zubenelgenubi
+zube_yb$vsShillelagh <- diff$Shillelagh - diff$Zubenelgenubi
 
 
 #Calculate Zube's performance ===========================================================
@@ -107,13 +105,38 @@ zube$vsShillelagh <- diff$Shillelagh - diff$Zubenelgenubi
 #select relevant data from Expedition
 exp <- exp %>% select(Boat, time, Utc, Bsp, Awa, Aws, Twa, Tws, Twd, Lat, Lon, Cog, Sog)
 
+exp <- exp[!is.na(exp$Twa), ]
+
+#average over 5 seconds
+exp$time <- round_date(exp$time, unit="5 seconds")
+
+exp <- exp %>% group_by(time) %>% summarise_all(mean)
+
 #calculate performance
+exp$opt_bsp <- getOptV(btw = abs(exp$Twa), vtw = exp$Tws, pol.model)
 
+exp$pol_perc <- (exp$Sog / exp$opt_bsp) * 100
 
+#calculate optimal speed and angle for VMC. 
+#need Bearing to Mark.  To calculate, we need to know which mark we're on. 
 
 #join zube Yellowbrick position data and expedition performance data
+exp$time <- round_date(exp$time, unit="second")
+
+#discard duplicate times
+exp <- exp %>% distinct(time, .keep_all = TRUE)
+
+zube <- full_join(zube_yb, exp) %>% arrange(time)
+
+#remove anything before the start
+zube <- zube %>% filter(time >= min(zube$start_time, na.rm=TRUE))
+
+#need to impute the mark information through out the entire data frame to calculate
 
 
 
+
+#just looking at the time where we know both
+zube_yb_exp <- zube[zube$time %in% zube_yb$time, ]
 
 
