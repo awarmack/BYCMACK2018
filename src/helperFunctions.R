@@ -11,3 +11,6 @@ calcdist <- function(lon1, lat1, lon2, lat2){
 
 
 
+#convert bearings to radians (for plotting)
+
+#example -10 degrees north = pi/2 + 10*pi/180k

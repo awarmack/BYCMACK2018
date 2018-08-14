@@ -8,6 +8,7 @@ library(lubridate)
 library(stringr)
 library(zoo)
 library(akima)
+library(geosphere)
 
 ### Load Data
 load("./data/positions.Rdata")
@@ -105,7 +106,9 @@ zube_yb$vsShillelagh <- diff$Shillelagh - diff$Zubenelgenubi
 #select relevant data from Expedition
 exp <- exp %>% select(Boat, time, Utc, Bsp, Awa, Aws, Twa, Tws, Twd, Lat, Lon, Cog, Sog)
 
-exp <- exp[!is.na(exp$Twa), ]
+names(exp) <- tolower(names(exp))
+
+exp <- exp[!is.na(exp$twa), ]
 
 #average over 5 seconds
 exp$time <- round_date(exp$time, unit="5 seconds")
@@ -113,25 +116,42 @@ exp$time <- round_date(exp$time, unit="5 seconds")
 exp <- exp %>% group_by(time) %>% summarise_all(mean)
 
 #calculate performance
-exp$opt_bsp <- getOptV(btw = abs(exp$Twa), vtw = exp$Tws, pol.model)
+exp$opt_bsp <- getOptV(btw = abs(exp$twa), vtw = exp$tws, pol.model)
 
-exp$pol_perc <- (exp$Sog / exp$opt_bsp) * 100
+exp$pol_perc <- (exp$sog / exp$opt_bsp) * 100
 
 #calculate optimal speed and angle for VMC. 
 #need Bearing to Mark.  To calculate, we need to know which mark we're on. 
 
 #join zube Yellowbrick position data and expedition performance data
-exp$time <- round_date(exp$time, unit="second")
-
 #discard duplicate times
-exp <- exp %>% distinct(time, .keep_all = TRUE)
+exp <- exp %>% distinct(time, .keep_all = TRUE) %>% select(-boat)
 
-zube <- full_join(zube_yb, exp) %>% arrange(time)
+zube <- full_join(zube_yb, exp, by="time", suffix=c(".yb", ".exp")) %>% arrange(time)
 
 #remove anything before the start
 zube <- zube %>% filter(time >= min(zube$start_time, na.rm=TRUE))
 
 #need to impute the mark information through out the entire data frame to calculate
+#carry the mark forward
+
+zube$mark <- na.locf(zube$mark)
+zube$markLat <- na.locf(zube$markLat)
+zube$markLon <- na.locf(zube$markLon)
+
+#bearing is in TRUE
+hasexppos <- !is.na(zube$lat.exp)
+
+p1 <- zube[hasexppos, c("lon.exp", "lat.exp")]
+p2 <- zube[hasexppos, c(c("markLon", "markLat"))]
+
+zube$btm[hasexppos] <- bearingRhumb(p1, p2)
+
+### Calculating the Vmc
+
+# get the bearing off the wind
+optimalcourse <- optvmc(btm = zube$btm, btw = zube$twa, vtw = zube$tws, pol.model = pol.model)
+
 
 
 

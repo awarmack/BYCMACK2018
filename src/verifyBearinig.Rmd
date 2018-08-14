@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Validating the calculationg of bearing to mark and distance to mark. 
+
+```{r}
+
+bearingToRad <- function(bearing){
+  (-bearing * (pi/180)) + (pi/2)
+}
+
+rose <- seq(0, 2*pi, length.out = 13 )
+
+ggplot()+geom_spoke(aes(x=0, y=0, angle=rose, radius=10))+coord_fixed()+
+        geom_spoke(aes(x=0, y=0, angle=bearingToRad(-95), radius=10 ,color="red"))
+```
+
+
+
+
+```{r}
+library(maps)
+
+zube_exp <- zube[!is.na(zube$lat.exp), ]
+
+sam <- sample(1:nrow(zube_exp), 10)
+sam <- zube_exp[sam, ]
+
+pt1 <- sam[, c("lon.exp", "lat.exp")]
+pt2 <- sam[, c("markLon", "markLat")]
+
+sam$btm <- bearing(pt1, pt2)
+sam$btmrh <-  bearingRhumb(pt1, pt2)
+#convert btm to radians 
+
+sam$btm_rad <- (-sam$btm * (pi/180)) + (pi/2)
+sam$btmrh_rad <- (-sam$btmrh * (pi/180)) + (pi/2)
+
+
+mi <- map_data("state") %>% filter(region=="michigan")
+
+ggplot()+
+  geom_polygon(data=mi, aes(long, lat, group=group)) + 
+  coord_map("polyconic", xlim=c(-85, -82), ylim=c(42.8, 46)) +
+  geom_point(data=sam, aes(lon.exp, lat.exp), color="blue") + 
+  geom_point(data=sam, aes(markLon, markLat), color="red") +
+  geom_spoke(data=sam, aes(lon.exp, lat.exp, angle=btmrh_rad), radius=1)+
+  geom_spoke(data=sam, aes(lon.exp, lat.exp, angle=btm_rad), radius=1, color="blue")+
+  geom_text(data=sam, aes(x=lon.exp, lat.exp, label=format(btmrh, digits = 3)))
+
+
+```
+
+```{r}
+lon <- c(-83, -84)
+lat <- c(44, 45) 
+
+test <- data.frame(lon, lat)
+
+bear <- bearingRhumb(test[1, c("lon", "lat")], test[2, c("lon", "lat")])
+fbear <- finalBearing(test[1, c("lon", "lat")], test[2, c("lon", "lat")])
+
+test[3, ] <- destPointRhumb(p = test[1, ], b = bear, d = 100000, r = 6378137)
+
+bear3 <- finalBearing(test[3, c("lon", "lat")], test[2, c("lon", "lat")])
+
+gcbear <- as.data.frame(greatCircleBearing(test[1, ], brng = bear, n=360*6))
+
+ggplot()+
+  geom_polygon(data=mi, aes(long, lat, group=group)) + 
+  coord_map("polyconic", xlim=c(-85, -82), ylim=c(42.8, 46)) +
+  geom_point(data=test, aes(lon, lat), color="blue") +
+  geom_spoke(data = test[1, ], aes(angle = bearingToRad(bear), x=lon, y=lat), radius=1, color="red")+
+  geom_spoke(data = test[2, ], aes(angle = bearingToRad(fbear-180), x=lon, y=lat), radius=1, color="green")+
+  geom_spoke(data = test[1, ], aes(angle = bearingToRad(315), x=lon, y=lat), radius=1, color="green")+
+  geom_point(data=gcbear, aes(lon, lat), color="red", shape=4)
+
+
+```
+
+
+
+
+

@@ -38,7 +38,7 @@ getOptV <- function(btw, vtw, pol.model){
 getBTMvBTW <- function(btm, btw){
   #returns the difference between bearing to mark and wind
   
-  diff <- btw-btm
+  diff <- btm-btw
   
   diff <- ifelse(diff > 180 | diff < -180, 360-diff, diff)
 
@@ -51,28 +51,36 @@ getBTMvBTW <- function(btm, btw){
 #figuring out max VMC Angle....
 # We'll check the VMC of both tacks seperately and decide if we're on the wrong tack elsewhere. 
 
-optvmc <- function(btm, btw, vtw, pol.model){
+optvmc <- function(btm, twd, tws, pol.model){
   #given a bearing to the mark from wind  and vtw
-  
-  # Bearing Off Wind = Bearing to Wind - Bearing to Mark
-  bow <- getBTMvBTW(btm, btw)
-  
+
   #create a vector of angles +/- from the btm
-  testbtw <- c(seq(bow-40, bow, by=0.5), seq(bow+0.1, bow+40, by=0.5))
-  cosangle <- cos((testbtw - bow)*(pi/180))
+  twa <- seq(-179, 179, by=1)
   
-  #find max VMC to the mark
-  v <- getOptV(testbtw, vtw, pol.model)
-  vmc <- v*cosangle
-  vmcopt <- max(vmc)
+  #find all bsp on the polar
+  v <- getOptV(abs(twa), tws, pol.model)  
+  
+  #Add true wind direction to true wind angle to get actual bearing
+  bearings <- twd - twa
+  #bearings <- ifelse(bearings <0, 360+bearings, bearings)
+  
+  #find difference between each bearing and the mark
+  btm <- ifelse(btm>180, btm-360, btm)
+  diff <- bearings - btm
+  
+  vmc <- v*cos(diff*(pi/180))
+  
+  opt <- data.frame(twa, diff, bsp=v, vmc)
+  
+  vmcopt <- max(vmc)  ### Could be multiple points (how to handle if on opp tacks?)
   
   #optimal angle to the mark
-  optvmcangle <- testbtw[which(vmcopt==vmc)]
+  opttwa <- testtwa[which(vmcopt==vmc)]
   
   #optimal boat speed at optimal vmc
   bsp <- v[which(vmcopt==vmc)]
   
-  return(list(bsp=bsp, vmcopt=vmcopt, optangle=optvmcangle, optheading = ,bow=bow))
+  return(data.frame(bsp=bsp, vmcopt=vmcopt, optangle=opttwa, bow=bow))
   
 }
 
