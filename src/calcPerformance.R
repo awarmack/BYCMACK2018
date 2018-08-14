@@ -14,7 +14,7 @@ library(geosphere)
 load("./data/positions.Rdata")
 load("./data/marks.Rdata")
 load("./data/results.Rdata")
-load("../polarAnalysis/polarmodel.rda")
+load("./data/polarmodel.rda")
 load("./data/expeditionclean.rda")
 
 ### Source other functions
