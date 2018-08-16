@@ -142,11 +142,11 @@ getOptV <- function(btw, vtw, pol.model){
 
 ```{r}
 
-x <- 1
+x <- 10
 
-btm <- runif(n=x, min = 0, max=360)
-twd <- runif(n=x, min = 0, max=360)
-tws <- runif(n=x, min = 3, max=20)
+btm <- 23.42#runif(n=x, min = 0, max=360)
+twd <- -161#runif(n=x, min = 0, max=360)
+tws <- 6#runif(n=x, min = 3, max=20)
 
 twa_s <- seq(0,180, by=2)
 twa_p <- normbear(seq(0,-180, by=-2))
@@ -155,18 +155,20 @@ v_s <- getOptV(twa_s, vtw=tws, pol.model)
 v_p <- getOptV(twa_p, vtw=tws, pol.model)
 
 
-opt <- unlist(mapply(FUN = optvmc, btm, twd, tws, MoreArgs = list(pol.model), SIMPLIFY = FALSE))
+opt <- mapply(FUN = optvmc, btm, twd, tws, MoreArgs = list(pol.model), SIMPLIFY = FALSE)
+opt <- do.call(rbind, opt)
 
 opt_bear <- opt["opt_bear"]
 
-ggplot()+ 
+
+ggplot()+
   geom_path(aes(x=normbear(twa_s+twd), y=v_s, group="group"), color="green")+
   geom_path(aes(x=normbear(twa_p+twd), y=v_p, group="group"), color="red")+
   coord_polar()+
   scale_x_continuous(limits=c(0,360), breaks=seq(0, 360, by=30))+
-  geom_vline(xintercept=twd)+
+  geom_vline(xintercept=normbear(twd))+
   #geom_vline(xintercept = normbear(opt["opt_bear"]), color="magenta")+
-  geom_segment(aes(x=opt_bear, xend=opt_bear, y=0, yend=opt["opt_bsp"]), color="magenta")+
+  geom_segment(aes(x=opt$opt_bear, xend=opt$opt_bear, y=0, yend=opt$opt_bsp), color="magenta")+
   geom_vline(xintercept = normbear(btm), color="blue")
   
   

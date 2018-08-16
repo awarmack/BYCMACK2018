@@ -52,7 +52,7 @@ getBTMvBTW <- function(btm, btw){
 
 
 #convert bearing to +/- 0 (north) from 0~360
-convBearing <- function(bearing){
+fromNorth <- function(bearing){
   ifelse(bearing>180, bearing-360, bearing)
 }
 
@@ -126,13 +126,11 @@ optvmc <- function(btm, twd, tws, pol.model){
   #find all bsp on the polar
   v <- getOptV(twa, tws, pol.model)  
   
+  #ensure TWD is in +/- 180 from 0. 
   twd <- convBearing(twd)
   
-  #Add true wind direction to true wind angle to get actual bearings 
-  bearings <- twd + twa
-  
-  #bearings <- ifelse(bearings <0, 360+bearings, bearings)
-  bearings <- ifelse(bearings > 360, bearings-360, bearings)
+  #Add true wind direction to true wind angle to get actual bearings of each point of the polar
+  bearings <- normbear(twd + twa)
   
   #find difference between each bearing and the mark
   btm <- convBearing(btm)  #convert to bearing +/- 180 degrees from north (rather than 0~360)
@@ -158,4 +156,27 @@ optvmc <- function(btm, twd, tws, pol.model){
 }
 
 
+
+optvmc <- function(btm, twd, tws, pol.model){
+  #BTM = Bearing to Mark (0-360)
+  #TWD = True Wind Direction (0-360)
+  #
+  
+  #nominal TWA (pointing at mark) where 0 at the wind
+  ntwa <- convBearing(btm) - convBearing(twd)
+  
+  #create vector of angles off the mark (0 at the wind)
+  off_mark <- seq(-180,180, by=1)
+  
+  twa_s <- convBearing(ntwa + off_mark)   #twa at each degree off the mark
+    
+    
+  
+  #bearings of each test position (actual bearings from the mark)
+  opt_bear <- btm + offmark
+  
+  #get the TWA for each opt bearing (negative = port)
+  opt_twa <- fromNorth(twd) + fromNorth(opt_bear)
+  
+}
 
