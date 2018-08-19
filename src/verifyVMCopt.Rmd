@@ -82,71 +82,17 @@ ggplot()+
 ```
 
 
+
+
+
+
 ```{r}
+
 x <- 1
 
-twd <- runif(n=x, min = -180, max=180)
-
-convBearing <- function(bearing){
-  ifelse(bearing>180, bearing-360, bearing)
-}
-
-
-#normBear (any negative or larger than 360, conver to bearing)
-
-normbear <- function(x){
-  x %% 360
-}
-                     
-print(twd)
-normbear(twd)
-
-ggplot()+
-  geom_vline(xintercept = twd)+
-  geom_vline(xintercept = normbear(twd), color="blue")+
-  scale_x_continuous(limits=c(0,360), breaks=seq(0, 360, by=30))+
-
-  coord_polar()
-  
-
-
-
-```
-
-```{r}
-getOptV <- function(btw, vtw, pol.model){
-  #returns Optimal Velocity at a given Bearing to Wind (BTW) and Wind Speed (VTW)
-  btw <- normbear(btw)
-  
-  btw <- convBearing(btw)
-
-  btw <- abs(btw)
-    
-  #ensure that the length of both btw and vtw are the same...
-  inputvectors <- matchLength(btw, vtw)
-  btw <- inputvectors[[1]]
-  vtw <- inputvectors[[2]]
-  
-  #output the optimum Velocity for a given BTW and wind speed. 
-  v <- bilinear(x=pol.model$twa, y=pol.model$tws, z=pol.model$pol.matrix, x0=btw, y0=vtw)
-  
-  return(v$z)
-  
-}
-
-
-```
-
-
-
-
-```{r}
-
-x <- 10
-
-btm <- 23.42#runif(n=x, min = 0, max=360)
-twd <- -161#runif(n=x, min = 0, max=360)
-tws <- 6#runif(n=x, min = 3, max=20)
+btm <- runif(n=x, min = 0, max=360)
+twd <- runif(n=x, min = 0, max=360)
+tws <- runif(n=x, min = 3, max=20)
 
 twa_s <- seq(0,180, by=2)
 twa_p <- normbear(seq(0,-180, by=-2))
@@ -166,7 +112,8 @@ ggplot()+
   geom_path(aes(x=normbear(twa_p+twd), y=v_p, group="group"), color="red")+
   coord_polar()+
   scale_x_continuous(limits=c(0,360), breaks=seq(0, 360, by=30))+
-  geom_vline(xintercept=normbear(twd))+
+  #geom_vline(xintercept=normbear(twd))+
+  geom_segment(data=opt, aes(x=twd, xend=twd, y=5, yend=3), color="black", arrow=arrow())+
   #geom_vline(xintercept = normbear(opt["opt_bear"]), color="magenta")+
   geom_segment(aes(x=opt$opt_bear, xend=opt$opt_bear, y=0, yend=opt$opt_bsp), color="magenta")+
   geom_vline(xintercept = normbear(btm), color="blue")

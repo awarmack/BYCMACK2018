@@ -80,6 +80,25 @@ ggplot()+
 
 ```
 
+```{r}
+
+#only look at points where we have TWD
+zubeexp <- zube[!is.na(zube$twd), ]
+
+#then let's look at 1 hour
+zubeexp <- zubeexp[zubeexp$time > as.POSIXct("2018-07-14 16:00:00") & zubeexp$time < as.POSIXct("2018-07-14 17:00:00"), ]
+
+
+
+
+ggplot()+
+  geom_polygon(data=mi, aes(long, lat, group=group)) + 
+  coord_map("polyconic", xlim=c(-82.45, -82.40), ylim=c(43.05, 43.15)) +
+  geom_point(data=zubeexp, aes(lon.exp, lat.exp), color="blue")
+
+
+
+```
 
 
 

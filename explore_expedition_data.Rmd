@@ -12,7 +12,7 @@ rm(list=ls())
 
 load("./data/expeditionclean.rda")
 load("./data/marks.Rdata")
-load("./data/positions.Rdata")
+load("./data/positions_wcorr.Rdata")
 load("./data/results.Rdata")
 
 pos <- left_join(pos, results)
