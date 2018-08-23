@@ -1,0 +1,90 @@
+---
+title: "Evaluating Smoothing Techniques for Expedition Data"
+output: html_notebook
+---
+
+Problem
+The data from expedition is somewhat noisy
+
+
+
+```{r}
+
+
+ggplot(exp)  + geom_point(aes(x=time, y=sog))
+
+```
+
+#selecting one section of the data to evaluate
+```{r}
+library(signal)
+test <- exp[exp$time < as.POSIXct("2018-07-14 19:30"), ]
+
+plotSmoothing <- function(test, column){
+  
+test$rollingmean10 <- rollmean(test[, column], k = 10, fill = NA)
+test$rollingmean60 <- rollmean(test[, column], k = 30, fill = NA)
+
+p <- ggplot(test)  + 
+  geom_point(aes_string(x="time", y=column)) + 
+  geom_path(aes(x=time, y=rollingmean10), color="red")+
+  geom_path(aes(x=time, y=rollingmean60), color="green")
+
+print(p)
+  
+}
+
+
+plotSmoothing(test, "bsp")
+plotSmoothing(test, "sog")
+plotSmoothing(test, "twd")
+
+```
+
+
+```{r}
+
+test$bsprollmean10 <- rollmean(test[, "bsp"], k = 10, fill = NA)
+test$sogrollmean10 <- rollmean(test[, "sog"], k = 10, fill = NA)
+
+
+ggplot(test)  + 
+  geom_point(aes(x=time, y=sog), color="red", alpha=0.3) +
+  geom_point(aes(x=time, y=bsp), color="blue", alpha=0.3)+
+  geom_path(aes(x=time, y=bsprollmean10), color="black")+
+  geom_path(aes(x=time, y=sogrollmean10), color="black")
+```
+
+```{r}
+
+#how to smooth bearing!!! 
+
+test$rollcog <- rollapply(fromNorth(test$cog), width=60, FUN=function(x) mean(x, na.rm=TRUE), fill=NA)
+
+
+
+ggplot(test) + 
+  geom_point(aes(x=time, y=fromNorth(cog)))+
+  geom_path(aes(x=time, y=rollcog), color="red")
+
+
+
+```
+
+
+```{r}
+
+test$rolllat <- rollapply(test$lat, width=10, FUN=function(x) mean(x, na.rm=TRUE), fill=NA)
+
+
+
+ggplot(test) + 
+  geom_point(aes(x=time, y=lat))+
+  geom_path(aes(x=time, y=rolllat), color="red")
+
+
+
+```
+
+
+

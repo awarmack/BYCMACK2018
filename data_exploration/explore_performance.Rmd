@@ -17,7 +17,7 @@ load("../data/zube_performance.rda")  #zube's performance variables
 load("../data/results.Rdata")         #class data from BYCMACK webpage
 load("../data/positions_wcorr.Rdata") #yellowbrick positions with corrected time
 load("../data/zube_yb_withdiff.rda")  #zube yellowbrick data with difference from class0 boats
-
+load("../data/expeditiondata_perf.rda")
 
 #Data Cleanup and Joining
 
@@ -58,10 +58,11 @@ mi <- map_data("state") %>% filter(region=="michigan")
 cols <- c("Class O"="grey", "Expedition Data"="blue", "YellowBrick Data"="red")
 
 #plot the positions
-ggplot()+
-  geom_polygon(data=mi, aes(long, lat, group=group)) + 
-  coord_map("polyconic", xlim=c(-85, -82), ylim=c(42.8, 46)) + 
-  geom_path(data=classo, aes(x=lon, y=lat, color="Class O")) + 
+mapplot <- ggplot()+
+            geom_polygon(data=mi, aes(long, lat, group=group)) + 
+            coord_map("polyconic", xlim=c(-85, -82), ylim=c(42.8, 46))
+
+mapplot + geom_path(data=classo, aes(x=lon, y=lat, color="Class O")) + 
   geom_point(data=zube, aes(x=lon.exp, y=lat.exp, color="Expedition Data"))+
   geom_path(data=zube_yb, aes(x=lon, y=lat, color="YellowBrick Data", group="boat"))+
   scale_color_manual(name="Data Source", values=cols)
@@ -111,9 +112,9 @@ ggplot()+
 ## Our Path versus Everyone Else
 ```{r}
 
-classdat <- classo %>% filter(place != "RET" & leg == "ST-HB")
-zubeybdat <- zube_yb %>% filter(leg == "ST-HB")
-zubedat <- zube %>% filter(leg == "ST-HB")
+classdat <- classo %>% filter(place != "RET" & leg == "HB-TBLT")
+zubeybdat <- zube_yb %>% filter(leg == "HB-TBLT")
+zubedat <- zube %>% filter(leg == "HB-TBLT")
 
 times <- seq(min(classdat$time), max(classdat$time), by="6 hour")
 
@@ -121,7 +122,7 @@ hrpoints <- classdat[classdat$time %in% times, ]
 
 ggplot()+
   geom_polygon(data=mi, aes(long, lat, group=group)) + 
-  coord_map("polyconic", xlim=c(-82.7, -82.25), ylim=c(43.05, 43.9)) + 
+  coord_map("polyconic", xlim=c(-83.5, -82.5), ylim=c(43.7, 45.3)) + 
   geom_path(data=classdat, aes(lon, lat, color=boat))+
   geom_point(data= hrpoints, aes(lon,lat, color=boat, shape=as.factor(time)))+
   geom_path(data=zubeybdat, aes(lon, lat, color="zube"), color="black")
@@ -152,14 +153,12 @@ ggplot(classdat) +
 Gain vs. rest of the fleet
 ```{r}
 
-zubeybdat$gainloss <- c(diff(zubeybdat$vsAlbacore) ,0)/.25 * -1
+zubedat <- zubedat[abs(zubedat$closerate) < 3, ]
 
-hrpoints <- zubeybdat[zubeybdat$time %in% times, ]
-
-ggplot(zubeybdat) + geom_path(aes(x=time, y=vsAlbacore*-1, color=gainloss), size=2) +
-  geom_vline(xintercept=times, color="Dark Gray") + 
+ggplot(zubedat) + geom_path(aes(x=time, y=vsAlbacore, color=closerate), size=1) +
+  #geom_vline(xintercept=times, color="Dark Gray") + 
   #scale_color_viridis(name = "Loss vs. Albacore [kts]")+
-  scale_color_gradient2(high="blue", low="red", midpoint=0, name="Gain vs. Albacore [kts]")+
+  scale_color_gradient2(high="blue", mid="yellow", low="red", midpoint=0, name="Gain vs. Albacore [kts]")+
   scale_x_time(breaks = xaxistime, labels=xaxislabels)+
   ggtitle("Zube vs. Albacore Gain/Loss in Corrected DMG")+
   xlab("Time")+
@@ -167,44 +166,96 @@ ggplot(zubeybdat) + geom_path(aes(x=time, y=vsAlbacore*-1, color=gainloss), size
   theme(axis.text.x = element_text(angle = 60, hjust = 1))+
   geom_hline(yintercept=0)
 
-ggplot(zubeybdat) + 
-  geom_polygon(data=mi, aes(long, lat, group=group)) + 
-  coord_map("polyconic", xlim=c(-82.7, -82.25), ylim=c(43.05, 43.9)) + 
-  geom_path(aes(x=lon, y=lat, color=gainloss), size=2)+
-  geom_point(data=hrpoints, aes(x=lon, y=lat, color=gainloss))+
-  geom_text(data=hrpoints, aes(x=lon, y=lat, label=format(time, "%a %R")), nudge_x = 0.1)+
-  scale_color_gradient2(high="blue", low="red", midpoint=0, name = "Gain vs. Albacore [kts]")
-  #scale_color_viridis(name = "Loss vs. Albacore [kts]")
 
 ```
 
 Performance over that same range
 ```{r}
 
+zube <- zube[zube$closerate < 2 & zube$closerate > -2, ]
 
+zube <- zube[zube$lon.exp < -82 & zube$lon.exp > -85, ]
 
-ggplot(zube[zube$gainrate < 2 & zube$gainrate > -2, ]) +
-  geom_polygon(data=mi, aes(long, lat, group=group)) + 
-  coord_map("polyconic", xlim=c(-82.7, -82.25), ylim=c(43.05, 43.9)) + 
-  geom_path(aes(x=lon.exp, y=lat.exp, color=gainrate))+
-  scale_color_gradient2(high="blue", low="red", midpoint=0, name = "Gain vs. Albacore [kts]")
-
-ggplot(zube[zube$gainrate < 2 & zube$gainrate > -2, ]) + geom_point(aes(x=gainrate, y=pol_perc)) + scale_y_continuous(limits=c(0,150))
-
+mapplot +
+  geom_path(data=zube, aes(x=lon.exp, y=lat.exp, color=closerate), size=1.5)+
+  scale_color_gradient2(high="blue", mid="light yellow", low="red", midpoint=0, name = "Gain vs. Albacore [kts]")
 ```
 
 Performance 
 ```{r}
 
-ggplot(zube) + geom_point(aes(x=time, y=pol_perc)) + scale_y_continuous(limits = c(0,200))
+ggplot() + geom_point(data=zube, aes(x=time, y=pol_perc, color=closerate), alpha=0.1) + 
+  geom_point(data=exp, aes(x=time, y=pol_perc))+
+  scale_y_continuous(limits = c(0,200))+
+  scale_color_gradient2(high="blue", mid="light yellow", low="red", midpoint=0, name = "Gain Rate vs. Albacore [kts]")+
+  geom_hline(yintercept=100, color="dark gray")
 
 ```
 
 
 ```{r}
 
-ggplot(zube) + geom_point(aes(x=time, y=vmc_perc)) + scale_y_continuous(limits = c(0,200))
+ggplot(zube)+geom_point(aes(x=pol_perc, y=closerate), alpha=0.01)+scale_x_continuous(limits=c(0, 200))
+
+```
+
+```{r}
+zube$gainloss <- ifelse(zube$gain > 0, "gain", "loss")
+
+ggplot(zube) + geom_density(aes(x=pol_perc, fill=gainloss), alpha=0.3) + scale_x_continuous(limits=c(-50, 200))
+
+```
+
+
+
+#How did sailing to VMC affect
+
+#optimal VMC Speed
+
+
+
+```{r}
+
+ggplot(zube)+geom_point(aes(x=vmc_perc, y=closerate), alpha=0.01)+scale_y_continuous(limits=c(-2, 2))+scale_x_continuous(limits=c(0,200))
+
+```
+
+```{r}
+zube$gainloss <- ifelse(zube$gain > 0, "gain", "loss")
+
+ggplot(zube) + geom_density(aes(x=vmc_perc, fill=gainloss), alpha=0.3) + scale_x_continuous(limits=c(-50, 200))
 
 
 ```
+
+
+#how about off the angle
+```{r}
+
+ggplot(zube)+geom_point(aes(x=opt_bear-cog, y=closerate), alpha=0.01)+scale_y_continuous(limits=c(-2, 2))
+
+```
+
+
+
+
+
+
+
+
+
+```{r}
+
+ggplot(zube) + geom_point(aes(x=time, y=vmc_perc, color=closerate), alpha=0.01) + scale_y_continuous(limits = c(0,200))+
+  scale_color_gradient2(high="blue", mid="light yellow", low="red", midpoint=0, name = "Gain Rate vs. Albacore [kts]")
+
+
+```
+
+
+
+
+
+
+
 

@@ -56,6 +56,7 @@ posn <- dat
 save(posn, file="./data/positions_wcorr.Rdata")
 
 
+
 #Calculate the Zube's position vs. other boats ================================
 classo <- dat %>% filter(class == "Class O Class")
 
@@ -91,11 +92,14 @@ diff_imp <- as.data.frame(apply(diff[, -1], 2, FUN=imputeValues))
 
 diff <- cbind(diff[, c("corr_time")], diff_imp)
 
+
 zube_yb <- dat %>% filter(boat == "Zubenelgenubi")
 
 diff <- diff[diff$corr_time %in% zube_yb$corr_time, ]
 
 zube_yb$vsAlbacore <- diff$Zubenelgenubi - diff$Albacore
+zube_yb$vsAlbacoreGain <- c(NA, diff(zube_yb$vsAlbacore))
+zube_yb$vsTunaSpeedDiff <- zube_yb$vsAlbacoreGain / .25    #15 min time diff
 zube_yb$vsBuffalo <- diff$Zubenelgenubi - diff$`Flying Buffalo` 
 zube_yb$vsCourage <- diff$Zubenelgenubi - diff$Courage  
 zube_yb$vsDefiant <- diff$Zubenelgenubi - diff$Defiant 
@@ -107,17 +111,57 @@ save(zube_yb, file="./data/zube_yb_withdiff.rda")
 
 #Calculate Zube's performance ===========================================================
 
-#select relevant data from Expedition
-exp <- exp %>% select(Boat, time, Utc, Bsp, Awa, Aws, Twa, Tws, Twd, Lat, Lon, Cog, Sog)
+#smooth the data =======
 
-names(exp) <- tolower(names(exp))
+#rolling 30 second average
+exp$bsp <- rollapply(exp$bsp, width=30, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
 
+#rolling 10 second average
+exp$sog <- rollapply(exp$sog, width=10, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
+exp$awa <- rollapply(exp$awa, width=10, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
+exp$aws <- rollapply(exp$aws, width=10, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
+exp$twa <- rollapply(exp$twa, width=10, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
+
+rollmeanbear <- function(bearing, width){
+  #rolling mean for a bearing
+  
+  bearing <- fromNorth(bearing)
+  
+  rollbear <- rollapply(bearing, width, FUN = function(x) mean(x, na.rm=TRUE), fill=NA)
+  
+  rollbear <- normbear(rollbear)
+  
+  return(rollbear)
+}
+
+exp$cog <- rollmeanbear(exp$cog, width=10)
+
+#handle missing COG
+exp$cog[is.nan(exp$cog)] <- NA
+
+imputeBearing <- function(bearing){
+  bearing <- fromNorth(bearing)
+  
+  bearing <- na.approx(exp$cog, maxgap = 30, na.rm = FALSE)
+  
+  bearing <- normbear(bearing)
+  
+  return(bearing)
+  
+}
+
+
+exp$cog <- imputeBearing(exp$cog)
+
+exp$twd[is.na(exp$twd)]<- getTWD(exp$twa[is.na(exp$twd)], exp$cog[is.na(exp$twd)])
+
+exp$twd <- rollmeanbear(exp$twd, width=10)
+
+
+
+#remove any lines where TWA is na
 exp <- exp[!is.na(exp$twa), ]
 
-#average over 5 seconds
-exp$time <- round_date(exp$time, unit="5 seconds")
-
-exp <- exp %>% group_by(time) %>% summarise_all(mean)
 
 
 #calculate performance to polars ========
@@ -127,6 +171,7 @@ exp$pol_perc <- (exp$sog / exp$opt_bsp) * 100
 
 exp$off_bsp <- exp$opt_bsp - exp$bsp
 
+save(exp, file="expeditiondata_perf.rda")
 
 
 #calculate optimal speed and angle for VMC =========
@@ -137,8 +182,16 @@ exp$off_bsp <- exp$opt_bsp - exp$bsp
   
     #join zube Yellowbrick position data and expedition performance data
     #discard duplicate times
-    exp <- exp %>% distinct(time, .keep_all = TRUE) %>% select(-boat)
     
+    #round up to the nearest second
+    exp$time <- ceiling_date(exp$time, unit = "second" )
+    exp <- exp %>% distinct(time, .keep_all = TRUE) 
+
+      
+    zube_yb$time <- ceiling_date(zube_yb$time, unit="second")
+
+
+
     zube <- full_join(zube_yb, exp, by="time", suffix=c(".yb", ".exp")) %>% arrange(time)
   
     #remove anything before the start
@@ -149,23 +202,38 @@ exp$off_bsp <- exp$opt_bsp - exp$bsp
     zube$mark <- na.locf(zube$mark)    #locf = last observation carried forward
     zube$markLat <- na.locf(zube$markLat)
     zube$markLon <- na.locf(zube$markLon)
+    
+
+
   
   ##clean up and impute missing positional data
-    ###Impute any TWD where we have TWA
-    zube$twd[!is.na(zube$tws)] <- getTWD(twa=zube$twa[!is.na(zube$tws)], hdg = zube$cog[!is.na(zube$tws)])
+  #linear interpolation of points
+  impcols <- c("lat.yb", "lon.yb", "SOG", "dtm", "dtf", "dmg", "vsAlbacore", "vsBuffalo", "vsCourage", 
+               "vsDefiant", "vsJamJam", "vsShillelagh", "bsp", "tws", "lat.exp", "lon.exp")
+  
+  toimpute <- zube[, impcols]
+  toimpute <- zoo(toimpute, zube$time)
+  
+  imputted <- na.approx(toimpute, na.rm = FALSE)
+  
+  zube[, impcols] <- imputted
   
   
-    #Impute Expedition Lat/Lon by linear interpolation for any that have TWD
-    hastwd <- !is.na(zube$twd)
+  zube$tdiff <- c(0, diff(zube$time))
+  
+  
+  #gain/loss vs. albacore
+  zube$gain <- c(0, diff(zube$vsAlbacore)) 
+  zube$closerate <- zube$gain / ((zube$tdiff)/3600)
+  
+  
+  
     
-    zube$lat.exp[hastwd] <- apply(zube[hastwd, "lat.exp"], 2, FUN=imputeValues)
-    zube$lon.exp[hastwd] <- apply(zube[hastwd, "lon.exp"], 2, FUN=imputeValues)
-  
   ##Calculate Bearing to the Mark
-  p1 <- zube[hastwd, c("lon.exp", "lat.exp")]
-  p2 <- zube[hastwd, c(c("markLon", "markLat"))]
+  p1 <- zube[!is.na(zube$lon.exp), c("lon.exp", "lat.exp")]
+  p2 <- zube[!is.na(zube$lon.exp), c(c("markLon", "markLat"))]
   
-  zube$btm[hastwd] <- bearingRhumb(p1, p2)
+  zube$btm[!is.na(zube$lon.exp)] <- bearingRhumb(p1, p2)
   
 
   # get the optimal bearing off the wind
@@ -182,13 +250,13 @@ zube$act_vmc <- getVMC(btm = zube$btm, cog = zube$cog, bsp = zube$bsp)
 zube$off_vmc <- zube$opt_vmc - zube$act_vmc
 zube$vmc_perc <- (zube$act_vmc/zube$opt_vmc) * 100
 
+
+
+
+
 ### Comparison of Performance vs. Position vs. Other Boats
 # First, we need to interpolate our position vs other boats since the points do not fully line up. 
 
-zube$vsAlbacore <- imputeValues(zube$vsAlbacore)
-
-zube$gain <- c(diff(zube$vsAlbacore) ,0) 
-zube$gainrate <- zube$gain / (as.numeric(c(diff(zube$time), 0))/3600)
 
 
 
