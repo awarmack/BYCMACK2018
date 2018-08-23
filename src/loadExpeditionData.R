@@ -43,6 +43,7 @@ exp <- exp[rowSums(is.na(exp[, -1:-2]))<10, ]
 exp$tws[exp$tws > 25] <- NA
 exp$sog[exp$sog > 15] <- NA
 exp$bsp[exp$bsp > 15] <- NA
+exp$lon[exp$lon > 0] <- NA
 
 #impute missing values using a linear interpolation
 exp$tws <- na.approx(exp$tws)

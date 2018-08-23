@@ -227,8 +227,7 @@ save(exp, file="expeditiondata_perf.rda")
   zube$closerate <- zube$gain / ((zube$tdiff)/3600)
   
   
-  
-    
+
   ##Calculate Bearing to the Mark
   p1 <- zube[!is.na(zube$lon.exp), c("lon.exp", "lat.exp")]
   p2 <- zube[!is.na(zube$lon.exp), c(c("markLon", "markLat"))]
