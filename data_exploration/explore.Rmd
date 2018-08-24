@@ -1,0 +1,190 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r, cache=TRUE}
+library(ggplot2)
+library(ggmap)
+library(ggrepel)
+library(dplyr)
+
+rm(list=ls())
+
+load("./data/positions.Rdata")
+load("./data/results.Rdata")
+load("./data/marks.Rdata")
+
+pos <- left_join(pos, results)
+
+
+lkhuron <- get_map(location = "Lake Huron", zoom=7)
+
+
+
+
+```
+
+```{r, cache=TRUE}
+
+pos <- pos[pos$place != "RET", ]
+
+
+classo <- pos %>% filter(class=="Class O Class")
+
+zube <- classo %>% filter(boat=="Zubenelgenubi")
+
+
+times <- seq(as.POSIXct("2018-07-14 12:00:00"), as.POSIXct("2018-07-16 20:00:00"), by ="4 hour")
+
+zube_pos <- zube[zube$time %in% times, ]
+
+ggmap(lkhuron)+
+  geom_path(data=classo, aes(x=lon, y=lat, color=boat))+ 
+  geom_point(data=zube_pos, aes(x=lon, y=lat))+
+  scale_x_continuous(limits = c(-84.5, -82))+
+  scale_y_continuous(limits = c(43, 46))+
+  geom_path(data=zube, aes(x=lon, y=lat), color="red")+
+  geom_text(data=zube_pos, aes(x=lon, y=lat, label=format(time, "%A-%H:%M")), nudge_x = -0.5)
+
+```
+
+
+```{r}
+
+classo <- pos %>% filter(class=="Class O Class")
+
+ggplot(classo)+geom_path(aes(x=time, y=SOG, group=boat), color="gray")+
+  scale_y_continuous(limits=c(0, 7))+
+  geom_path(data=zube, aes(x=time, y=SOG), color="red")
+
+
+```
+
+```{r}
+
+classo <- classo[classo$dmg > 0, ]
+
+
+#time passing each mark
+markpassing <- classo %>% group_by(boat, mark) %>% summarise(timepassing = min(time), dmg_pass = min(dmg))
+
+#
+startTime <- as.POSIXct("2018-7-14 11:00:00")
+
+
+classo$day <- format(classo$time, "%F")
+
+ggplot()+geom_path(data=classo, aes(x=time, y=dmg, color=boat, linetype=boat))+
+  geom_path(data=classo[classo$boat=="Zubenelgenubi", ], aes(x=time, y=dmg), color="Red", size=1)+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 1)+
+  ggtitle("Entire Race")
+
+ggplot(classo)+geom_path(aes(x=time, y=SOG, group=boat), color="gray")+
+  scale_y_continuous(limits=c(0, 7))+
+  geom_path(data=zube, aes(x=time, y=SOG), color="red")
+
+
+```
+
+```{r}
+#look at corrected versus actual
+
+source("./src/calcCorrection.R")
+
+
+
+zube <- classo[classo$boat=="Zubenelgenubi", ] 
+zube$corrected <- calcCorrected(zube$time, 0.718)
+
+albacore <- classo[classo$boat=="Albacore", ] 
+albacore$corrected <- calcCorrected(albacore$time, 0.737)
+
+#dat <- bind_rows(zube, albacore)
+
+ggplot()+
+  geom_path(data=zube, aes(x=time, y=dmg, color=boat))+
+  geom_path(data=zube, aes(x=corrected, y=dmg, color=boat), linetype=2)+
+  geom_path(data=albacore, aes(x=time, y=dmg, color=boat))+
+  geom_path(data=albacore, aes(x=corrected, y=dmg, color=boat), linetype=2)+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 1)
+
+
+
+```
+
+```{r}
+#calculate gain/loss on Albacore over the race
+
+#distance between them 
+
+zubevtuna <- classo %>% filter(boat %in% c("Zubenelgenubi", "Albacore"), !is.na(boat)) %>% select(boat, time, dmg) 
+
+zubevtuna <- zubevtuna[c(-325, -478), ]
+
+zubevtuna <- zubevtuna %>% spread(boat, dmg) %>% mutate(diff = Albacore - Zubenelgenubi)
+
+zubevtuna$trend <- ifelse(c(0, diff(zubevtuna$diff) > 0)==1, "loss", "gain")
+
+ggplot(zubevtuna, aes(x=time, y=diff, color=trend)) + geom_point()
+
+```
+
+
+```{r}
+#race #1
+
+dat <- classo[classo$mark=="S1 HB", ]
+dat_z <- dat %>% filter(boat=="Zubenelgenubi")
+
+ggplot()+geom_path(data=dat, aes(x=time, y=dmg, color=boat, linetype=boat))+
+  geom_path(data=dat_z, aes(x=time, y=dmg), color="Red", size=1)+
+  ggtitle("Start to Harbor Beach")
+
+```
+
+```{r}
+#Race #2 Harbor Beach to TBLT
+dat <- classo[classo$mark=="S3 TBLT", ]
+dat_z <- dat %>% filter(boat=="Zubenelgenubi")
+
+ggplot()+geom_path(data=dat, aes(x=time, y=dmg, color=boat, linetype=boat))+
+  geom_path(data=dat_z, aes(x=time, y=dmg), color="Red", size=1)+
+  ggtitle("Harbor Beach to Thunder Bay Light")
+
+
+```
+
+```{r}
+
+race3 <- marks$mark[4:6]
+
+
+dat <- classo[classo$mark %in% race3, ]
+dat_z <- dat %>% filter(boat=="Zubenelgenubi")
+
+ggplot()+geom_path(data=dat, aes(x=time, y=dmg, color=boat, linetype=boat))+
+  geom_path(data=dat_z, aes(x=time, y=dmg), color="Red", size=1)+
+  ggtitle("Thunder Bay Light to Presque Isle")
+
+```
+
+```{r}
+race4 <- marks$mark[7:8]
+
+dat <- classo[classo$mark %in% race4, ]
+dat_z <- dat %>% filter(boat=="Zubenelgenubi")
+
+ggplot()+geom_path(data=dat, aes(x=time, y=dmg, color=boat, linetype=boat))+
+  geom_path(data=dat_z, aes(x=time, y=dmg), color="Red", size=1)+
+  ggtitle("Presque Isle to Finish")
+
+ggplot()+geom_path(data=dat, aes(x=time, y=SOG, group=boat), color="gray")+
+  scale_y_continuous(limits=c(0,7))+geom_path(data=dat_z, aes(x=time, y=SOG), color="Red")
+
+```
+
