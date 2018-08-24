@@ -150,7 +150,7 @@ ggplot(classdat) +
 
 ```
 
-Gain vs. rest of the fleet
+Gain vs. Albacore
 ```{r}
 
 zubedat <- zubedat[abs(zubedat$closerate) < 3, ]
@@ -158,7 +158,8 @@ zubedat <- zubedat[abs(zubedat$closerate) < 3, ]
 ggplot(zubedat) + geom_path(aes(x=time, y=vsAlbacore, color=closerate), size=1) +
   #geom_vline(xintercept=times, color="Dark Gray") + 
   #scale_color_viridis(name = "Loss vs. Albacore [kts]")+
-  scale_color_gradient2(high="blue", mid="yellow", low="red", midpoint=0, name="Gain vs. Albacore [kts]")+
+  #3scale_color_gradient2(high="blue", mid="yellow", low="red", midpoint=0, name="Gain vs. Albacore [kts]")+
+  scale_color_viridis_c(name="Gain vs. Albacore [kts]")+
   scale_x_time(breaks = xaxistime, labels=xaxislabels)+
   ggtitle("Zube vs. Albacore Gain/Loss in Corrected DMG")+
   xlab("Time")+
@@ -178,16 +179,17 @@ zube <- zube[zube$lon.exp < -82 & zube$lon.exp > -85, ]
 
 mapplot +
   geom_path(data=zube, aes(x=lon.exp, y=lat.exp, color=closerate), size=1.5)+
-  scale_color_gradient2(high="blue", mid="light yellow", low="red", midpoint=0, name = "Gain vs. Albacore [kts]")
+  scale_color_viridis_c(name="Gain vs. Albacore [kts]")
 ```
 
 Performance 
 ```{r}
 
-ggplot() + geom_point(data=zube, aes(x=time, y=pol_perc, color=closerate), alpha=0.1) + 
-  geom_point(data=exp, aes(x=time, y=pol_perc))+
+ggplot() + 
+  geom_point(data=zube, aes(x=time, y=pol_perc, color=closerate), alpha=0.1) + 
+  #geom_point(data=exp, aes(x=time, y=pol_perc))+
   scale_y_continuous(limits = c(0,200))+
-  scale_color_gradient2(high="blue", mid="light yellow", low="red", midpoint=0, name = "Gain Rate vs. Albacore [kts]")+
+  scale_color_viridis_c(name="Gain vs. Albacore [kts]")+
   geom_hline(yintercept=100, color="dark gray")
 
 ```
@@ -195,7 +197,10 @@ ggplot() + geom_point(data=zube, aes(x=time, y=pol_perc, color=closerate), alpha
 
 ```{r}
 
-ggplot(zube)+geom_point(aes(x=pol_perc, y=closerate), alpha=0.01)+scale_x_continuous(limits=c(0, 200))
+ggplot(zube, aes(x=pol_perc, y=closerate, color=closerate))+
+  geom_point(alpha=0.01)+scale_x_continuous(limits=c(0, 200))+
+  scale_color_viridis_c(name="Gain vs. Albacore [kts]")+
+  geom_smooth(method = "lm")
 
 ```
 
