@@ -53,6 +53,7 @@ Determine if gain or loss versus other boats is due to poor boat trim and course
 * Polar Percentage [%]
 * Optimal Velocity to the Mark
 * VMC Percentage [%]
+* DMG: Distance Made Good to the Mark (Total Track Distance - Distance Remaining)
 
 
 ###Data Collected
@@ -60,12 +61,12 @@ The boat instrument data was collected through Expedition [link] running on a ta
 
 However, the tablet could not run the entire race due to battery life. So we could not collect boat instrument data throughout the entire race. 
 
-```{r warning=FALSE}
+```{r fig.height=10, fig.width=8, warning=FALSE}
 #get states shape files
 mi <- map_data("state") %>% filter(region=="michigan")
 
 
-cols <- c("Class O"="grey", "Expedition Data"="blue", "YellowBrick Data"="red")
+cols <- c("Class O"="dark grey", "Expedition Data"="blue", "YellowBrick Data"="red")
 
 #plot the positions
 mapplot <- ggplot()+
@@ -84,5 +85,76 @@ mapplot + geom_path(data=classo, aes(x=lon, y=lat, group=boat, color="Class O"))
 
 
 ##Performance Versus other boats
+
+```{r fig.height=10, fig.width=8}
+colors <- c(RColorBrewer::brewer.pal(10, name = "Paired"), "black")
+
+mapplot + geom_path(data=classo, aes(x=lon, y=lat, color=boat)) + 
+  scale_color_manual(values = colors)
+
+
+```
+
+
+### Comparison of Distance Made Good to the Mark
+This shows the total distance made good [DMG] to the mark. 
+
+Distance Made Good is the Total Race Distance minus total distance to finish. Distance to finish includes the distance to the current mark plus the distance between all remaning marks. 
+
+![DMG](./README_files/dtm.png)
+
+```{r fig.height=6, fig.width=8}
+
+classo <- classo[classo$dmg > 0, ]
+
+
+#time passing each mark
+markpassing <- classo %>% group_by(boat, mark) %>% summarise(timepassing = min(time), dmg_pass = min(dmg))
+
+#
+startTime <- as.POSIXct("2018-7-14 11:00:00")
+
+
+classo$day <- format(classo$time, "%F")
+
+ggplot()+geom_path(data=classo, aes(x=time, y=dmg, color=boat))+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 2, size=3)+
+  scale_color_manual(values=colors)+
+  ggtitle("DMG Entire Race - All of Class O")
+
+```
+
+On Corrected Time
+```{r fig.height=6, fig.width=8}
+ggplot()+geom_path(data=classo, aes(x=corr_time, y=dmg, color=boat))+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 2, size=3)+
+  scale_color_manual(values=colors)+
+  ggtitle("DMG Entire Race - All of Class O")
+
+```
+
+We can see that coming into Presque Isle we actually were in 5th place corrected ahead of Courage, Defiant, and La Faucon. 
+
+```{r fig.height=6, fig.width=8}
+
+ggplot()+geom_path(data=classo, aes(x=corr_time, y=dmg, color=boat))+
+  scale_color_manual(values=colors)+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=as.POSIXct("2018-07-15 21:00:00 EDT"), y=dmg, label=mark), nudge_y = 2, size=3)+
+  ggtitle("DMG False Presque Isle to Finish")+
+  scale_y_continuous(limits=c(138, 205))+
+  scale_x_datetime(limits=c(as.POSIXct("2018-07-15 21:00:00 EDT"), as.POSIXct("2018-07-16 22:00:00 EDT")))
+```
+
+
+
+
+##Against Albacore
+We'll use Albacore as our reference boat to compare our gain/loss during the race. 
+
+
+
 
 

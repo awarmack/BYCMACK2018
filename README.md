@@ -27,6 +27,7 @@ Determine if gain or loss versus other boats is due to poor boat trim and course
 -   Polar Percentage \[%\]
 -   Optimal Velocity to the Mark
 -   VMC Percentage \[%\]
+-   DMG: Distance Made Good to the Mark (Total Track Distance - Distance Remaining)
 
 ### Data Collected
 
@@ -38,3 +39,26 @@ However, the tablet could not run the entire race due to battery life. So we cou
 
 Performance Versus other boats
 ------------------------------
+
+![](README_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+### Comparison of Distance Made Good to the Mark
+
+This shows the total distance made good \[DMG\] to the mark.
+
+Distance Made Good is the Total Race Distance minus total distance to finish. Distance to finish includes the distance to the current mark plus the distance between all remaning marks.
+
+![DMG](./README_files/dtm.png)
+
+![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+On Corrected Time ![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+We can see that coming into Presque Isle we actually were in 5th place corrected ahead of Courage, Defiant, and La Faucon.
+
+![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+Against Albacore
+----------------
+
+We'll use Albacore as our reference boat to compare our gain/loss during the race.
