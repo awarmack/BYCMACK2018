@@ -1,33 +1,40 @@
-README
+PERFORMANCE ANALYSIS
 ================
 
-GitHub Documents
-----------------
+Objectives
+----------
 
-This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
+Determine if gain or loss versus other boats is due to poor boat trim and course or due to bad luck.
 
-Including Code
---------------
+------------------------------------------------------------------------
 
-You can include R code in the document as follows:
+### Data Sources
 
-``` r
-summary(cars)
-```
+-   YellowBrick: Position of Zubenelgenubi versus other boats
+-   Boat Instrumentation: Wind, Boat Speed, and Position
 
-    ##      speed           dist       
-    ##  Min.   : 4.0   Min.   :  2.00  
-    ##  1st Qu.:12.0   1st Qu.: 26.00  
-    ##  Median :15.0   Median : 36.00  
-    ##  Mean   :15.4   Mean   : 42.98  
-    ##  3rd Qu.:19.0   3rd Qu.: 56.00  
-    ##  Max.   :25.0   Max.   :120.00
+### Measured Values
 
-Including Plots
----------------
+-   TWA: True Wind Angle \[Deg\]
+-   TWS: True Wind Speed \[kts\]
+-   COG: Course Over Ground \[Deg\]
+-   SOG: Speed Over Ground \[kts\]
+-   Position: Lat/Lon
 
-You can also embed plots, for example:
+### Derived Values
 
-![](README_files/figure-markdown_github/pressure-1.png)
+-   Optimal Boat Speed \[kts\] -- From boat polars
+-   Polar Percentage \[%\]
+-   Optimal Velocity to the Mark
+-   VMC Percentage \[%\]
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Data Collected
+
+The boat instrument data was collected through Expedition \[link\] running on a tablet connected to the boat through wifi.
+
+However, the tablet could not run the entire race due to battery life. So we could not collect boat instrument data throughout the entire race.
+
+![](README_files/figure-markdown_github/unnamed-chunk-1-1.png)
+
+Performance Versus other boats
+------------------------------

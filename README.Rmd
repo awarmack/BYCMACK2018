@@ -1,30 +1,88 @@
 ---
-title: "README"
+title: "PERFORMANCE ANALYSIS"
 output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE)
+
+rm(list=ls())
+
+library(ggplot2)
+library(ggrepel)
+library(tidyverse)
+library(lubridate)
+
+#load data
+load("./data/marks.Rdata")           #location of the marks
+load("./data/zube_performance.rda")  #zube's performance variables
+load("./data/results.Rdata")         #class data from BYCMACK webpage
+load("./data/positions_wcorr.Rdata") #yellowbrick positions with corrected time
+load("./data/zube_yb_withdiff.rda")  #zube yellowbrick data with difference from class0 boats
+load("./data/expeditiondata_perf.rda")
+
+#Data Cleanup and Joining
+
+#add class data to YellowBrick position data
+results <- results %>% select(-elapsed_time, -Corrected)
+  
+#extract our class
+classo <- posn %>% filter(class == "Class O Class")
+
+
 ```
 
-## GitHub Documents
+##Objectives
+Determine if gain or loss versus other boats is due to poor boat trim and course or due to bad luck. 
 
-This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
+***
 
-## Including Code
+###Data Sources
+* YellowBrick: Position of Zubenelgenubi versus other boats
+* Boat Instrumentation: Wind, Boat Speed, and Position
 
-You can include R code in the document as follows:
+###Measured Values
+* TWA: True Wind Angle [Deg]
+* TWS: True Wind Speed [kts]
+* COG: Course Over Ground [Deg]
+* SOG: Speed Over Ground [kts]
+* Position: Lat/Lon
 
-```{r cars}
-summary(cars)
+###Derived Values
+* Optimal Boat Speed [kts] -- From boat polars
+* Polar Percentage [%]
+* Optimal Velocity to the Mark
+* VMC Percentage [%]
+
+
+###Data Collected
+The boat instrument data was collected through Expedition [link] running on a tablet connected to the boat through wifi. 
+
+However, the tablet could not run the entire race due to battery life. So we could not collect boat instrument data throughout the entire race. 
+
+```{r warning=FALSE}
+#get states shape files
+mi <- map_data("state") %>% filter(region=="michigan")
+
+
+cols <- c("Class O"="grey", "Expedition Data"="blue", "YellowBrick Data"="red")
+
+#plot the positions
+mapplot <- ggplot()+
+            geom_polygon(data=mi, aes(long, lat, group=group)) + 
+            coord_map("polyconic", xlim=c(-85, -82), ylim=c(42.8, 46))
+
+mapplot + geom_path(data=classo, aes(x=lon, y=lat, group=boat, color="Class O")) + 
+  geom_point(data=zube, aes(x=lon.exp, y=lat.exp, color="Expedition Data"))+
+  geom_path(data=zube_yb, aes(x=lon, y=lat, color="YellowBrick Data", group="boat"))+
+  scale_color_manual(name="Data Source", values=cols)+
+  scale_x_continuous(name="Longitude")+
+  scale_y_continuous(name="Latitude")
+  
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+##Performance Versus other boats
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
