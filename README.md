@@ -60,9 +60,11 @@ Performance to our polars over the race Because it is difficult to view, we'll s
 
 ![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
+![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
 We can see that coming into Presque Isle we actually were in 5th place corrected ahead of Courage, Defiant, and La Faucon.
 
-![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 Against Albacore
 ----------------
