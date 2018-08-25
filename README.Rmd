@@ -135,6 +135,75 @@ ggplot()+geom_path(data=classo, aes(x=corr_time, y=dmg, color=boat))+
 
 ```
 
+Performance to our polars over the race
+Because it is difficult to view, we'll split into different legs
+
+```{r fig.height=8, fig.width=8}
+
+legs <- data.frame(leg = c("ST-HB", "ST-HB", "HB-TBLT", "TBLT-PI", "TBLT-PI", "TBLT-PI", "PI-FIN", "PI-FIN"), 
+                   mark = unique(zube$mark))
+
+legs$leg <- ordered(legs$leg, levels = c("ST-HB", "HB-TBLT", "TBLT-PI", "PI-FIN"))
+
+zube <- left_join(zube, legs)
+
+classo <- left_join(classo, legs)
+
+leg1 <- classo[classo$leg == "ST-HB", ]
+
+ggplot()+geom_path(data=leg1, aes(x=corr_time, y=dmg, color=boat))+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 2, size=3)+
+  scale_color_manual(values=colors)+
+  scale_y_continuous(limits=c(0, 50))+
+  scale_x_datetime(limits=c(as.POSIXct("2018-07-14 14:00:00"), as.POSIXct("2018-07-15 09:00:00")))+
+  ggtitle("Start to Harbor Beach")
+
+
+
+
+```
+
+
+
+
+
+```{r fig.height=6, fig.width=8}
+
+zube$pol_perc[is.infinite(zube$pol_perc)] <- NA
+
+ggplot()+geom_path(data=classo, aes(x=corr_time, y=dmg, group=boat), color="dark gray")+
+  geom_point(data=zube, aes(x=corr_time, y=dmg, color=pol_perc))+
+  geom_hline(data=marks, aes(yintercept=dmg))+
+  geom_text(data=marks, aes(x=startTime, y=dmg, label=mark), nudge_y = 2, size=3)+
+  scale_color_gradient(low = "red", high="blue", limits=c(0, 200))+
+  ggtitle("DMG Entire Race - All of Class O")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 We can see that coming into Presque Isle we actually were in 5th place corrected ahead of Courage, Defiant, and La Faucon. 
 
 ```{r fig.height=6, fig.width=8}
